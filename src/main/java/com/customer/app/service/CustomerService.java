@@ -18,4 +18,6 @@ public interface CustomerService {
 
 	void bulkAdd(List<CustomerDTO> customerDTOs);
 
+	CustomerDTO addFriend(int id, List<Integer> friendIds);
+
 }

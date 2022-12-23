@@ -43,6 +43,7 @@ public class CustomerController {
 	public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable int id) {
 		try {
 			CustomerDTO customerDTOs = customerService.getCustomerById(id);
+			System.out.println(customerDTOs);
 			if (Objects.nonNull(customerDTOs))
 				return new ResponseEntity<CustomerDTO>(customerDTOs, HttpStatus.OK);
 			else
@@ -69,6 +70,16 @@ public class CustomerController {
 			return new ResponseEntity<Object>("Customer successfully updated", HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<Object>("Customer not found with the id: "+id, HttpStatus.NOT_FOUND);
+		}
+	}
+	
+	@PutMapping("/addFriend/{id}")
+	public ResponseEntity<Object> addFriend(@PathVariable int id, @RequestBody List<Integer> friendIds) {
+		try {
+			CustomerDTO customerDTO = customerService.addFriend(id, friendIds);
+			return new ResponseEntity<Object>(customerDTO, HttpStatus.CREATED);
+		} catch (Exception e) {
+			return new ResponseEntity<Object>("Some error occured while adding friend", HttpStatus.BAD_REQUEST);
 		}
 	}
 	
