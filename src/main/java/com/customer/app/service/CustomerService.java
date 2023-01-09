@@ -8,16 +8,18 @@ public interface CustomerService {
 
 	List<CustomerDTO> getAllCustomers();
 
-	CustomerDTO getCustomerById(int id);
+	CustomerDTO getCustomerById(String id);
 
 	String addCustomer(CustomerDTO customerDTO) throws Exception;
 
-	void updateCustomer(CustomerDTO customerDTO, int id) throws Exception;
+	void updateCustomer(CustomerDTO customerDTO, String id) throws Exception;
 
-	void deleteCustomer(int id) throws Exception;
+	void deleteCustomer(String id) throws Exception;
 
 	void bulkAdd(List<CustomerDTO> customerDTOs);
 
-	CustomerDTO addFriend(int id, List<Integer> friendIds);
+	CustomerDTO addFriend(String id, List<String> friendIds);
+
+	void resetPassword(String password, String id) throws Exception;
 
 }

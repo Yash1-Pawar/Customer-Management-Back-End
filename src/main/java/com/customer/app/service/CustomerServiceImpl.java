@@ -1,14 +1,15 @@
 package com.customer.app.service;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.customer.app.entity.CustomerEntity;
@@ -21,6 +22,9 @@ public class CustomerServiceImpl implements CustomerService {
 	@Autowired
 	private CustomerRepo customerRepo;
 
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
 	@Override
 	public List<CustomerDTO> getAllCustomers() {
 		List<CustomerEntity> customerEntities = customerRepo.findAll();
@@ -30,8 +34,8 @@ public class CustomerServiceImpl implements CustomerService {
 			for (String ele : e.getFriendsId().split(",")) {
 				friends.add(ele.trim());
 			}
-			customerDTOs.add(
-					new CustomerDTO(e.getId(), e.getName(), e.getSkills(), e.getDesc(), e.getGender(), friends));
+			customerDTOs.add(new CustomerDTO(e.getId(), e.getName(), e.getSkills(), e.getDesc(), e.getGender(), friends,
+					e.getRoles()));
 		}
 		if (customerDTOs.isEmpty()) {
 			System.out.println("No Customers Founds");
@@ -40,7 +44,7 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	public CustomerDTO getCustomerById(int id) {
+	public CustomerDTO getCustomerById(String id) {
 		CustomerDTO customerDTO = null;
 		try {
 			Optional<CustomerEntity> optional = customerRepo.findById(id);
@@ -49,8 +53,9 @@ public class CustomerServiceImpl implements CustomerService {
 			for (String e : customerEntity.getFriendsId().split(",")) {
 				friendDTOs.add(e.trim());
 			}
-			customerDTO = new CustomerDTO(customerEntity.getId(), customerEntity.getName(), customerEntity.getSkills(),
-					customerEntity.getDesc(), customerEntity.getGender(), friendDTOs);
+			customerDTO = new CustomerDTO(customerEntity.getId(), customerEntity.getName(),
+					customerEntity.getPassword(), customerEntity.getSkills(), customerEntity.getDesc(),
+					customerEntity.getGender(), friendDTOs, customerEntity.getRoles());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -63,27 +68,43 @@ public class CustomerServiceImpl implements CustomerService {
 		if (optional.isPresent()) {
 			throw new Exception("Customer already exists with id: " + customerDTO.getId());
 		}
-		CustomerEntity customerEntity = new CustomerEntity(customerDTO.getName(), customerDTO.getSkills(),
-				customerDTO.getDesc(), customerDTO.getGender(), "");
-		customerEntity.setId(customerDTO.getId());
+		CustomerEntity customerEntity = new CustomerEntity(customerDTO.getId(), customerDTO.getName(),
+				passwordEncoder.encode(customerDTO.getPassword()), customerDTO.getSkills(), customerDTO.getDesc(),
+				customerDTO.getGender(), "", Roles.USER.toString());
 		CustomerEntity customerEntityfromDB = customerRepo.save(customerEntity);
-		return Integer.toString(customerEntityfromDB.getId());
+		return customerEntityfromDB.getId();
 	}
 
 	@Override
-	public void updateCustomer(CustomerDTO customerDTO, int id) throws Exception {
+	public void updateCustomer(CustomerDTO customerDTO, String id) throws Exception {
 		Optional<CustomerEntity> optional = customerRepo.findById(id);
 		CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
-		customerEntity.setDesc(customerDTO.getDesc());
-		customerEntity.setGender(customerDTO.getGender());
-		customerEntity.setName(customerDTO.getName());
-		customerEntity.setSkills(customerDTO.getSkills());
 		customerEntity.setId(id);
+		if (StringUtils.isNotBlank(customerDTO.getName()))
+			customerEntity.setName(customerDTO.getName());
+		if (StringUtils.isNotBlank(customerDTO.getSkills()))
+			customerEntity.setSkills(customerDTO.getSkills());
+		if (StringUtils.isNotBlank(customerDTO.getDesc()))
+			customerEntity.setDesc(customerDTO.getDesc());
+		if (StringUtils.isNotBlank(customerDTO.getGender()))
+			customerEntity.setGender(customerDTO.getGender());
+		if (StringUtils.isNotBlank(customerDTO.getRoles()))
+			customerEntity.setRoles(customerDTO.getRoles());
+		customerRepo.save(customerEntity);
+	}
+	
+	@Override
+	public void resetPassword(String password, String id) throws Exception {
+		Optional<CustomerEntity> optional = customerRepo.findById(id);
+		CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
+		customerEntity.setId(id);
+		customerEntity.setPassword(passwordEncoder.encode(password));
+		System.out.println("Password Reset successfull. Login with new password");
 		customerRepo.save(customerEntity);
 	}
 
 	@Override
-	public void deleteCustomer(int id) throws Exception {
+	public void deleteCustomer(String id) throws Exception {
 		Optional<CustomerEntity> optional = customerRepo.findById(id);
 		optional.orElseThrow(() -> new Exception("Customer Not Found"));
 		customerRepo.deleteById(id);
@@ -102,42 +123,44 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	public CustomerDTO addFriend(int id, List<Integer> friendIds) {
-		CustomerDTO customerDTO = this.getCustomerById(id);
-		if (Objects.nonNull(customerDTO)) {
+	public CustomerDTO addFriend(String id, List<String> friendIds) {
+		CustomerDTO customerDTO = null;
+		try {
+			customerDTO = this.getCustomerById(id);
+			Optional<CustomerEntity> optional = customerRepo.findById(id);
+			CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
 			List<String> friendDTOs = new ArrayList<>();
-			for (int e : friendIds) {
-				if(id == e || customerDTO.getfriends().contains(Integer.toString(e))) {
-					System.out.println("Skipping User: "+ e);
+			for (String e : friendIds) {
+				if (id.equals(e) || customerDTO.getFriends().contains(e)) {
+					System.out.println("Skipping User: " + e);
 					continue;
 				}
 				CustomerDTO friendDTO = this.getCustomerById(e);
 				if (Objects.nonNull(friendDTO)) {
-					friendDTOs.add(Integer.toString(friendDTO.getId()));
+					friendDTOs.add(friendDTO.getId());
 				} else {
 					System.out.println("Customer not found with id: " + e);
 				}
 			}
-			for(String e: customerDTO.getfriends()) {
-				if(StringUtils.isNotBlank(e)) friendDTOs.add(e);
+			for (String e : customerDTO.getFriends()) {
+				if (StringUtils.isNotBlank(e))
+					friendDTOs.add(e);
 			}
 			StringBuilder friendsEntity = new StringBuilder();
-			int n = friendDTOs.size(),i=1;
-			for(String e: friendDTOs) {
-				if(i<n)
+			int n = friendDTOs.size(), i = 1;
+			for (String e : friendDTOs) {
+				if (i < n)
 					friendsEntity.append(e + ",");
-				else if(i==n)
+				else if (i == n)
 					friendsEntity.append(e);
 				i++;
 			}
-			CustomerEntity customerEntity = new CustomerEntity(customerDTO.getName(), customerDTO.getSkills(),
-					customerDTO.getDesc(), customerDTO.getGender(), friendsEntity.toString());
-			customerEntity.setId(customerDTO.getId());
+			customerEntity.setFriendsId(friendsEntity.toString());
 			customerRepo.save(customerEntity);
-			customerDTO.setfriends(friendDTOs);
+			customerDTO.setFriends(friendDTOs);
 			System.out.println("Friends added");
-		} else {
-			System.out.println("Customer not found with id: " + id);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 		}
 		return customerDTO;
 	}

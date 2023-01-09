@@ -6,7 +6,6 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,12 +15,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.customer.app.model.CustomerDTO;
 import com.customer.app.service.CustomerService;
 
-@CrossOrigin
+@CrossOrigin(value = "*")
 @RestController
 @RequestMapping("/customerApp")
 public class CustomerController {
@@ -33,74 +31,95 @@ public class CustomerController {
 	public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
 		try {
 			List<CustomerDTO> customerDTOs = customerService.getAllCustomers();
-			return new ResponseEntity<List<CustomerDTO>>(customerDTOs, HttpStatus.OK);
+			System.out.println(customerDTOs);
+			return new ResponseEntity<>(customerDTOs, HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<List<CustomerDTO>>(HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@GetMapping("/getCustomer/{id}")
-	public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable int id) {
-		try {
-			CustomerDTO customerDTOs = customerService.getCustomerById(id);
-			System.out.println(customerDTOs);
-			if (Objects.nonNull(customerDTOs))
-				return new ResponseEntity<CustomerDTO>(customerDTOs, HttpStatus.OK);
-			else
-				return new ResponseEntity<CustomerDTO>(HttpStatus.NOT_FOUND);
-		} catch (Exception e) {
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+	public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable String id) {
+		CustomerDTO customerDTOs = customerService.getCustomerById(id);
+		System.out.println(customerDTOs);
+		if (Objects.nonNull(customerDTOs))
+			return new ResponseEntity<>(customerDTOs, HttpStatus.OK);
+		else
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
-	
+
 	@PostMapping("/addCustomer")
 	public ResponseEntity<Object> addCustomer(@RequestBody CustomerDTO customerDTO) {
 		try {
 			String id = customerService.addCustomer(customerDTO);
-			return new ResponseEntity<Object>("Customer created with id: "+id, HttpStatus.CREATED);
+			return new ResponseEntity<>("Customer created with id: " + id, HttpStatus.CREATED);
 		} catch (Exception e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer already exists with this id");
+			return new ResponseEntity<>("Customer already exists with id: " + customerDTO.getId(),
+					HttpStatus.BAD_REQUEST);
 		}
 	}
-	
+
 	@PutMapping("/updateCustomer/{id}")
-	public ResponseEntity<Object> updateCustomer(@RequestBody CustomerDTO customerDTO, @PathVariable int id) {
+	public ResponseEntity<String> updateCustomer(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
 		try {
-			customerService.updateCustomer(customerDTO,id);
-			return new ResponseEntity<Object>("Customer successfully updated", HttpStatus.CREATED);
+			customerService.updateCustomer(customerDTO, id);
+			return new ResponseEntity<>("Customer successfully updated", HttpStatus.CREATED);
 		} catch (Exception e) {
-			return new ResponseEntity<Object>("Customer not found with the id: "+id, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
 		}
 	}
+
+	@PutMapping("/resetPassword/{id}")
+	public ResponseEntity<String> resetPassword(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
+		try {
+			customerService.resetPassword(customerDTO.getPassword(), id);
+			return new ResponseEntity<>("Customer successfully updated", HttpStatus.ACCEPTED);
+		} catch (Exception e) {
+			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
+		}
+	}
+
 	
 	@PutMapping("/addFriend/{id}")
-	public ResponseEntity<Object> addFriend(@PathVariable int id, @RequestBody List<Integer> friendIds) {
+	public ResponseEntity<Object> addFriend(@PathVariable String id, @RequestBody List<String> friendIds) {
 		try {
 			CustomerDTO customerDTO = customerService.addFriend(id, friendIds);
-			return new ResponseEntity<Object>(customerDTO, HttpStatus.CREATED);
+			return new ResponseEntity<>(customerDTO, HttpStatus.CREATED);
 		} catch (Exception e) {
-			return new ResponseEntity<Object>("Some error occured while adding friend", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>("Some error occured while adding friend", HttpStatus.BAD_REQUEST);
 		}
 	}
-	
+
 	@DeleteMapping("/deleteCustomer/{id}")
-	public ResponseEntity<Object> deleteCustomer(@PathVariable int id) {
+	public ResponseEntity<String> deleteCustomer(@PathVariable String id) {
 		try {
 			customerService.deleteCustomer(id);
-			return new ResponseEntity<Object>("Customer deleted successfully", HttpStatus.OK);
+			return new ResponseEntity<>("Customer deleted successfully", HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<Object>("Customer not found with the id: "+id, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
 		}
 	}
-	
+
 	@PostMapping("/addCustomers")
-	public ResponseEntity<Object> bulkAdd(@RequestBody List<CustomerDTO> customerDTO) {
+	public ResponseEntity<String> bulkAdd(@RequestBody List<CustomerDTO> customerDTO) {
 		try {
 			customerService.bulkAdd(customerDTO);
-			return new ResponseEntity<Object>("Bulk addition done", HttpStatus.CREATED);
+			return new ResponseEntity<>("Bulk addition done", HttpStatus.CREATED);
 		} catch (Exception e) {
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	@GetMapping("/helloAdmin")
+	public ResponseEntity<String> sayHelloAdmin() {
+		System.out.println("Hello from secured endpoint");
+		return ResponseEntity.ok("Hello Admin from secured endpoint");
+	}
+
+	@GetMapping("/helloUser")
+	public ResponseEntity<String> sayHelloUser() {
+		System.out.println("Hello from secured endpoint");
+		return ResponseEntity.ok("Hello User from secured endpoint");
 	}
 
 }
