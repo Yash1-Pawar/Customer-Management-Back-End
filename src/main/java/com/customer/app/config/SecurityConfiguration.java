@@ -3,6 +3,8 @@ package com.customer.app.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,6 +12,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.customer.app.service.Roles;
 
@@ -24,21 +28,33 @@ public class SecurityConfiguration {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf()
-        .disable()
-        .authorizeHttpRequests()
-        .requestMatchers("/jwt/**").permitAll()
-        .requestMatchers("/customerApp/helloAdmin").hasRole(Roles.ADMIN.toString())
-        .requestMatchers("/customerApp/helloUser").hasAnyRole(Roles.USER.toString(), Roles.ADMIN.toString())
-        .anyRequest().authenticated()
-        .and()
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-        .authenticationProvider(authenticationProvider)
-        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+		http.csrf().disable()
+			.cors().and()
+			.authorizeHttpRequests().requestMatchers("/jwt/**").permitAll()
+//			.requestMatchers("/customerApp/**").permitAll()
+			.requestMatchers("/customerApp/helloAdmin").hasRole(Roles.ADMIN.toString())
+			.requestMatchers("/customerApp/helloUser").hasAnyRole(Roles.USER.toString(), Roles.ADMIN.toString())
+			.anyRequest().authenticated().and()
+			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+			.authenticationProvider(authenticationProvider)
+			.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-	return http.build();
-  }
+		return http.build();
+	}
+
+	@Bean
+	@Order(Ordered.HIGHEST_PRECEDENCE)
+	public WebMvcConfigurer corsConfigurer() {
+		return new WebMvcConfigurer() {
+			@Override
+			public void addCorsMappings(CorsRegistry registry) {
+				registry
+						.addMapping("/customerApp/**")
+						.allowedOrigins("http://localhost:4200")
+						.allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")
+//						.exposedHeaders("Authorization")
+						.allowCredentials(true);
+			}
+		};
+	}
 }

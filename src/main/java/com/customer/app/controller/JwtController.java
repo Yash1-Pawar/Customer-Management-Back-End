@@ -39,6 +39,7 @@ public class JwtController {
 		}
 	}
 
+//	login
 	@PostMapping("/getToken")
 	public ResponseEntity<AuthenticationResponse> getToken(@RequestBody CustomerDTO customerDTO) {
 		try {

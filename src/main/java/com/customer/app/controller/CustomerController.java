@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.customer.app.model.CustomerDTO;
 import com.customer.app.service.CustomerService;
 
-@CrossOrigin(value = "*")
+@CrossOrigin
 @RestController
 @RequestMapping("/customerApp")
 public class CustomerController {
@@ -48,22 +48,22 @@ public class CustomerController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
-	@PostMapping("/addCustomer")
-	public ResponseEntity<Object> addCustomer(@RequestBody CustomerDTO customerDTO) {
-		try {
-			String id = customerService.addCustomer(customerDTO);
-			return new ResponseEntity<>("Customer created with id: " + id, HttpStatus.CREATED);
-		} catch (Exception e) {
-			return new ResponseEntity<>("Customer already exists with id: " + customerDTO.getId(),
-					HttpStatus.BAD_REQUEST);
-		}
-	}
+//	@PostMapping("/addCustomer")
+//	public ResponseEntity<Object> addCustomer(@RequestBody CustomerDTO customerDTO) {
+//		try {
+//			String id = customerService.addCustomer(customerDTO);
+//			return new ResponseEntity<>("Customer created with id: " + id, HttpStatus.CREATED);
+//		} catch (Exception e) {
+//			return new ResponseEntity<>("Customer already exists with id: " + customerDTO.getId(),
+//					HttpStatus.BAD_REQUEST);
+//		}
+//	}
 
 	@PutMapping("/updateCustomer/{id}")
 	public ResponseEntity<String> updateCustomer(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
 		try {
 			customerService.updateCustomer(customerDTO, id);
-			return new ResponseEntity<>("Customer successfully updated", HttpStatus.CREATED);
+			return new ResponseEntity<>("{\"response\" : \"Customer successfully updated\"}", HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
 		}
@@ -94,7 +94,7 @@ public class CustomerController {
 	public ResponseEntity<String> deleteCustomer(@PathVariable String id) {
 		try {
 			customerService.deleteCustomer(id);
-			return new ResponseEntity<>("Customer deleted successfully", HttpStatus.OK);
+			return new ResponseEntity<>("{\"response\" : \"Customer deleted successfully\"}", HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
 		}
