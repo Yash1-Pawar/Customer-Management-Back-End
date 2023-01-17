@@ -32,7 +32,7 @@ public class SecurityConfiguration {
 			.cors().and()
 			.authorizeHttpRequests().requestMatchers("/jwt/**").permitAll()
 //			.requestMatchers("/customerApp/**").permitAll()
-			.requestMatchers("/customerApp/helloAdmin").hasRole(Roles.ADMIN.toString())
+			.requestMatchers("/customerApp/updateCustomer/**" , "/customerApp/deleteCustomer/**").hasRole(Roles.ADMIN.toString())
 			.requestMatchers("/customerApp/helloUser").hasAnyRole(Roles.USER.toString(), Roles.ADMIN.toString())
 			.anyRequest().authenticated().and()
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()

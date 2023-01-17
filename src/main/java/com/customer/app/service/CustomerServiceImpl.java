@@ -69,7 +69,7 @@ public class CustomerServiceImpl implements CustomerService {
 			throw new Exception("Customer already exists with id: " + customerDTO.getId());
 		}
 		CustomerEntity customerEntity = new CustomerEntity(customerDTO.getId(), customerDTO.getName(),
-				passwordEncoder.encode(customerDTO.getPassword()), customerDTO.getSkills(), customerDTO.getDesc(),
+				customerDTO.getPassword(), customerDTO.getSkills(), customerDTO.getDesc(),
 				customerDTO.getGender(), "", Roles.USER.toString());
 		CustomerEntity customerEntityfromDB = customerRepo.save(customerEntity);
 		return customerEntityfromDB.getId();
