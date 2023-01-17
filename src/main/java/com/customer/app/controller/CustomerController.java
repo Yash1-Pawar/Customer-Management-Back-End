@@ -84,7 +84,17 @@ public class CustomerController {
 	public ResponseEntity<Object> addFriend(@PathVariable String id, @RequestBody List<String> friendIds) {
 		try {
 			CustomerDTO customerDTO = customerService.addFriend(id, friendIds);
-			return new ResponseEntity<>(customerDTO, HttpStatus.CREATED);
+			return new ResponseEntity<>(customerDTO, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>("Some error occured while adding friend", HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@PutMapping("/addFollower/{id}")
+	public ResponseEntity<Object> addFollower(@PathVariable String id, @RequestBody List<String> followerIds) {
+		try {
+			CustomerDTO customerDTO = customerService.addFollowers(id, followerIds);
+			return new ResponseEntity<>(customerDTO, HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Some error occured while adding friend", HttpStatus.BAD_REQUEST);
 		}
