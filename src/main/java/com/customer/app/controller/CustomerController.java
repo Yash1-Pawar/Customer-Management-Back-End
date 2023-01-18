@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.customer.app.model.CustomerDTO;
+import com.customer.app.model.RestPasswordDTO;
 import com.customer.app.service.CustomerService;
 
 @CrossOrigin
@@ -48,17 +49,6 @@ public class CustomerController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
-//	@PostMapping("/addCustomer")
-//	public ResponseEntity<Object> addCustomer(@RequestBody CustomerDTO customerDTO) {
-//		try {
-//			String id = customerService.addCustomer(customerDTO);
-//			return new ResponseEntity<>("Customer created with id: " + id, HttpStatus.CREATED);
-//		} catch (Exception e) {
-//			return new ResponseEntity<>("Customer already exists with id: " + customerDTO.getId(),
-//					HttpStatus.BAD_REQUEST);
-//		}
-//	}
-
 	@PutMapping("/updateCustomer/{id}")
 	public ResponseEntity<String> updateCustomer(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
 		try {
@@ -68,17 +58,6 @@ public class CustomerController {
 			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
 		}
 	}
-
-	@PutMapping("/resetPassword/{id}")
-	public ResponseEntity<String> resetPassword(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
-		try {
-			customerService.resetPassword(customerDTO.getPassword(), id);
-			return new ResponseEntity<>("Customer successfully updated", HttpStatus.ACCEPTED);
-		} catch (Exception e) {
-			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
-		}
-	}
-
 	
 	@PutMapping("/addFriend/{id}")
 	public ResponseEntity<Object> addFriend(@PathVariable String id, @RequestBody List<String> friendIds) {

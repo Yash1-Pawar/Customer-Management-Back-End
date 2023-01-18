@@ -5,14 +5,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.customer.app.model.AuthenticationResponse;
 import com.customer.app.model.CustomerDTO;
+import com.customer.app.model.RestPasswordDTO;
 import com.customer.app.service.AuthenticationService;
+import com.customer.app.service.CustomerService;
 
 @CrossOrigin(value = "*")
 @RestController
@@ -21,6 +25,9 @@ public class JwtController {
 
 	@Autowired
 	private AuthenticationService authenticationService;
+	
+	@Autowired
+	private CustomerService customerService;
 
 	@GetMapping("/hello")
 	public ResponseEntity<String> sayHello() {
@@ -47,6 +54,16 @@ public class JwtController {
 			return ResponseEntity.ok(authenticationResponse);
 		} catch (Exception e) {
 			return new ResponseEntity<AuthenticationResponse>(HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@PutMapping("/resetPassword/{id}")
+	public ResponseEntity<String> resetPassword(@RequestBody RestPasswordDTO restPasswordDTO, @PathVariable String id) {
+		try {
+			customerService.resetPassword(restPasswordDTO, id);
+			return new ResponseEntity<>("Password Reset Successful", HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 	}
 

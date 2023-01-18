@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.customer.app.entity.CustomerEntity;
 import com.customer.app.model.CustomerDTO;
+import com.customer.app.model.RestPasswordDTO;
 import com.customer.app.repository.CustomerRepo;
 
 @Service
@@ -100,13 +101,18 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 	
 	@Override
-	public void resetPassword(String password, String id) throws Exception {
+	public void resetPassword(RestPasswordDTO restPasswordDTO, String id) throws Exception {
 		Optional<CustomerEntity> optional = customerRepo.findById(id);
 		CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
-		customerEntity.setId(id);
-		customerEntity.setPassword(passwordEncoder.encode(password));
-		System.out.println("Password Reset successfull. Login with new password");
-		customerRepo.save(customerEntity);
+		if (passwordEncoder.matches(restPasswordDTO.getOldPassword(), customerEntity.getPassword())) {
+			customerEntity.setId(id);
+			customerEntity.setPassword(passwordEncoder.encode(restPasswordDTO.getNewPassword()));
+			customerRepo.save(customerEntity);
+			System.out.println("Password Reset successfull. Login with new password");
+		}else {
+			System.out.println("Old Password doesnot match");
+			throw new Exception("Old Password doesnot match");
+		}
 	}
 
 	@Override
