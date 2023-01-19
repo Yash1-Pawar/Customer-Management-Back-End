@@ -101,7 +101,7 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 	
 	@Override
-	public void resetPassword(RestPasswordDTO restPasswordDTO, String id) throws Exception {
+	public void changePassword(RestPasswordDTO restPasswordDTO, String id) throws Exception {
 		Optional<CustomerEntity> optional = customerRepo.findById(id);
 		CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
 		if (passwordEncoder.matches(restPasswordDTO.getOldPassword(), customerEntity.getPassword())) {
@@ -114,6 +114,18 @@ public class CustomerServiceImpl implements CustomerService {
 			throw new Exception("Old Password doesnot match");
 		}
 	}
+	
+	@Override
+	public void resetPassword(String newPassword, String id) throws Exception {
+		Optional<CustomerEntity> optional = customerRepo.findById(id);
+		CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
+		customerEntity.setId(id);
+		System.out.println("changePassowrd: " + newPassword);
+		customerEntity.setPassword(passwordEncoder.encode(newPassword));
+		customerRepo.save(customerEntity);
+		System.out.println("Password Reset successfull. Login with new password");
+	}
+
 
 	@Override
 	public void deleteCustomer(String id) throws Exception {

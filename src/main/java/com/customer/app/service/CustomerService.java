@@ -21,8 +21,10 @@ public interface CustomerService {
 
 	CustomerDTO addFriend(String id, List<String> friendIds);
 
-	void resetPassword(RestPasswordDTO restPasswordDTO, String id) throws Exception;
+	void changePassword(RestPasswordDTO restPasswordDTO, String id) throws Exception;
 
 	CustomerDTO addFollowers(String id, List<String> friendIds);
+
+	void resetPassword(String newPassword, String id) throws Exception;
 
 }

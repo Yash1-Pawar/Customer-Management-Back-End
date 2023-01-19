@@ -53,7 +53,7 @@ public class CustomerController {
 	public ResponseEntity<String> updateCustomer(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
 		try {
 			customerService.updateCustomer(customerDTO, id);
-			return new ResponseEntity<>("{\"response\" : \"Customer successfully updated\"}", HttpStatus.CREATED);
+			return new ResponseEntity<>("Customer successfully updated", HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
 		}
@@ -110,5 +110,16 @@ public class CustomerController {
 		System.out.println("Hello from secured endpoint");
 		return ResponseEntity.ok("Hello User from secured endpoint");
 	}
+	
+	@PutMapping("/changePassword/{id}")
+	public ResponseEntity<String> changePassword(@RequestBody RestPasswordDTO restPasswordDTO, @PathVariable String id) {
+		try {
+			customerService.changePassword(restPasswordDTO, id);
+			return new ResponseEntity<>("Password Changed Successful", HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
+	}
+
 
 }

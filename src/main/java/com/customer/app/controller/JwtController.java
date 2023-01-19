@@ -58,9 +58,9 @@ public class JwtController {
 	}
 	
 	@PutMapping("/resetPassword/{id}")
-	public ResponseEntity<String> resetPassword(@RequestBody RestPasswordDTO restPasswordDTO, @PathVariable String id) {
+	public ResponseEntity<String> resetPassword(@RequestBody String newPassword, @PathVariable String id) {
 		try {
-			customerService.resetPassword(restPasswordDTO, id);
+			customerService.resetPassword(newPassword, id);
 			return new ResponseEntity<>("Password Reset Successful", HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
