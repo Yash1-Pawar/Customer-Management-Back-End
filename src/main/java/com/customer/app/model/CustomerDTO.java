@@ -24,26 +24,26 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CustomerDTO implements UserDetails  {
+public class CustomerDTO implements UserDetails {
 
 	private String id;
 	private String name;
-	private String password;	
+	private String password;
 	private String skills;
 	private String desc;
 	private String gender;
 	private List<String> friends;
+	private List<String> followers;
 	private String roles;
-	
+
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		List<SimpleGrantedAuthority> authorities;
-		if(StringUtils.isNotEmpty(this.roles)) {
-			String[] rolesList = StringUtils.split(this.roles ,",");
-			authorities = Arrays.asList(rolesList).stream()
-				.map((role) -> new SimpleGrantedAuthority("ROLE_"+role)).collect(Collectors.toList());
-		}
-		else {
+		if (StringUtils.isNotEmpty(this.roles)) {
+			String[] rolesList = StringUtils.split(this.roles, ",");
+			authorities = Arrays.asList(rolesList).stream().map((role) -> new SimpleGrantedAuthority("ROLE_" + role))
+					.collect(Collectors.toList());
+		} else {
 			authorities = new ArrayList<>();
 		}
 		return authorities;
@@ -75,7 +75,7 @@ public class CustomerDTO implements UserDetails  {
 	}
 
 	public CustomerDTO(String id, String name, String skills, String desc, String gender, List<String> friends,
-			String roles) {
+			List<String> followers, String roles) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -83,7 +83,8 @@ public class CustomerDTO implements UserDetails  {
 		this.desc = desc;
 		this.gender = gender;
 		this.friends = friends;
+		this.followers = followers;
 		this.roles = roles;
 	}
-	
+
 }

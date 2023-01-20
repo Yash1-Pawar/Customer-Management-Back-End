@@ -28,6 +28,7 @@ public class CustomerEntity {
 	private String desc;
 	private String gender;
 	private String friendsId;
+	private String followers;
 	private String roles;
 
 }

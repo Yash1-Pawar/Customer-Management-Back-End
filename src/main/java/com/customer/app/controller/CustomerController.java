@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.customer.app.model.CustomerDTO;
+import com.customer.app.model.RestPasswordDTO;
 import com.customer.app.service.CustomerService;
 
 @CrossOrigin
@@ -48,43 +49,31 @@ public class CustomerController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
-//	@PostMapping("/addCustomer")
-//	public ResponseEntity<Object> addCustomer(@RequestBody CustomerDTO customerDTO) {
-//		try {
-//			String id = customerService.addCustomer(customerDTO);
-//			return new ResponseEntity<>("Customer created with id: " + id, HttpStatus.CREATED);
-//		} catch (Exception e) {
-//			return new ResponseEntity<>("Customer already exists with id: " + customerDTO.getId(),
-//					HttpStatus.BAD_REQUEST);
-//		}
-//	}
-
 	@PutMapping("/updateCustomer/{id}")
 	public ResponseEntity<String> updateCustomer(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
 		try {
 			customerService.updateCustomer(customerDTO, id);
-			return new ResponseEntity<>("{\"response\" : \"Customer successfully updated\"}", HttpStatus.CREATED);
+			return new ResponseEntity<>("Customer successfully updated", HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
 		}
 	}
-
-	@PutMapping("/resetPassword/{id}")
-	public ResponseEntity<String> resetPassword(@RequestBody CustomerDTO customerDTO, @PathVariable String id) {
-		try {
-			customerService.resetPassword(customerDTO.getPassword(), id);
-			return new ResponseEntity<>("Customer successfully updated", HttpStatus.ACCEPTED);
-		} catch (Exception e) {
-			return new ResponseEntity<>("Customer not found with the id: " + id, HttpStatus.NOT_FOUND);
-		}
-	}
-
 	
 	@PutMapping("/addFriend/{id}")
 	public ResponseEntity<Object> addFriend(@PathVariable String id, @RequestBody List<String> friendIds) {
 		try {
 			CustomerDTO customerDTO = customerService.addFriend(id, friendIds);
-			return new ResponseEntity<>(customerDTO, HttpStatus.CREATED);
+			return new ResponseEntity<>(customerDTO, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>("Some error occured while adding friend", HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@PutMapping("/addFollower/{id}")
+	public ResponseEntity<Object> addFollower(@PathVariable String id, @RequestBody List<String> followerIds) {
+		try {
+			CustomerDTO customerDTO = customerService.addFollowers(id, followerIds);
+			return new ResponseEntity<>(customerDTO, HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>("Some error occured while adding friend", HttpStatus.BAD_REQUEST);
 		}
@@ -121,5 +110,16 @@ public class CustomerController {
 		System.out.println("Hello from secured endpoint");
 		return ResponseEntity.ok("Hello User from secured endpoint");
 	}
+	
+	@PutMapping("/changePassword/{id}")
+	public ResponseEntity<String> changePassword(@RequestBody RestPasswordDTO restPasswordDTO, @PathVariable String id) {
+		try {
+			customerService.changePassword(restPasswordDTO, id);
+			return new ResponseEntity<>("Password Changed Successful", HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
+	}
+
 
 }

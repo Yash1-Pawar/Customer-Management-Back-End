@@ -1,11 +1,9 @@
 package com.customer.app.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.customer.app.entity.CustomerEntity;
 import com.customer.app.model.CustomerDTO;
+import com.customer.app.model.RestPasswordDTO;
 import com.customer.app.repository.CustomerRepo;
 
 @Service
@@ -31,11 +30,15 @@ public class CustomerServiceImpl implements CustomerService {
 		List<CustomerDTO> customerDTOs = new ArrayList<>();
 		for (CustomerEntity e : customerEntities) {
 			List<String> friends = new ArrayList<>();
-			for (String ele : e.getFriendsId().split(",")) {
-				friends.add(ele.trim());
+			List<String> followers = new ArrayList<>();
+			for (String friend : e.getFriendsId().split(",")) {
+				friends.add(friend.trim());
+			}
+			for (String follower : e.getFollowers().split(",")) {
+				followers.add(follower.trim());
 			}
 			customerDTOs.add(new CustomerDTO(e.getId(), e.getName(), e.getSkills(), e.getDesc(), e.getGender(), friends,
-					e.getRoles()));
+					followers, e.getRoles()));
 		}
 		if (customerDTOs.isEmpty()) {
 			System.out.println("No Customers Founds");
@@ -50,12 +53,16 @@ public class CustomerServiceImpl implements CustomerService {
 			Optional<CustomerEntity> optional = customerRepo.findById(id);
 			CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
 			List<String> friendDTOs = new ArrayList<>();
+			List<String> followersDTOs = new ArrayList<>();
 			for (String e : customerEntity.getFriendsId().split(",")) {
 				friendDTOs.add(e.trim());
 			}
+			for (String e : customerEntity.getFollowers().split(",")) {
+				followersDTOs.add(e.trim());
+			}
 			customerDTO = new CustomerDTO(customerEntity.getId(), customerEntity.getName(),
 					customerEntity.getPassword(), customerEntity.getSkills(), customerEntity.getDesc(),
-					customerEntity.getGender(), friendDTOs, customerEntity.getRoles());
+					customerEntity.getGender(), friendDTOs, followersDTOs, customerEntity.getRoles());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -70,7 +77,7 @@ public class CustomerServiceImpl implements CustomerService {
 		}
 		CustomerEntity customerEntity = new CustomerEntity(customerDTO.getId(), customerDTO.getName(),
 				customerDTO.getPassword(), customerDTO.getSkills(), customerDTO.getDesc(),
-				customerDTO.getGender(), "", Roles.USER.toString());
+				customerDTO.getGender(), "", "", Roles.USER.toString());
 		CustomerEntity customerEntityfromDB = customerRepo.save(customerEntity);
 		return customerEntityfromDB.getId();
 	}
@@ -94,14 +101,31 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 	
 	@Override
-	public void resetPassword(String password, String id) throws Exception {
+	public void changePassword(RestPasswordDTO restPasswordDTO, String id) throws Exception {
+		Optional<CustomerEntity> optional = customerRepo.findById(id);
+		CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
+		if (passwordEncoder.matches(restPasswordDTO.getOldPassword(), customerEntity.getPassword())) {
+			customerEntity.setId(id);
+			customerEntity.setPassword(passwordEncoder.encode(restPasswordDTO.getNewPassword()));
+			customerRepo.save(customerEntity);
+			System.out.println("Password Reset successfull. Login with new password");
+		}else {
+			System.out.println("Old Password doesnot match");
+			throw new Exception("Old Password doesnot match");
+		}
+	}
+	
+	@Override
+	public void resetPassword(String newPassword, String id) throws Exception {
 		Optional<CustomerEntity> optional = customerRepo.findById(id);
 		CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
 		customerEntity.setId(id);
-		customerEntity.setPassword(passwordEncoder.encode(password));
-		System.out.println("Password Reset successfull. Login with new password");
+		System.out.println("changePassowrd: " + newPassword);
+		customerEntity.setPassword(passwordEncoder.encode(newPassword));
 		customerRepo.save(customerEntity);
+		System.out.println("Password Reset successfull. Login with new password");
 	}
+
 
 	@Override
 	public void deleteCustomer(String id) throws Exception {
@@ -165,4 +189,47 @@ public class CustomerServiceImpl implements CustomerService {
 		return customerDTO;
 	}
 
+	@Override
+	public CustomerDTO addFollowers(String id, List<String> followers) {
+		CustomerDTO customerDTO = null;
+		try {
+			customerDTO = this.getCustomerById(id);
+			Optional<CustomerEntity> optional = customerRepo.findById(id);
+			CustomerEntity customerEntity = optional.orElseThrow(() -> new Exception("Customer Not Found"));
+			List<String> followersDTOs = new ArrayList<>();
+			for (String e : followers) {
+				if (id.equals(e) || customerDTO.getFollowers().contains(e)) {
+					System.out.println("Skipping User: " + e);
+					continue;
+				}
+				CustomerDTO followersDTO = this.getCustomerById(e);
+				if (Objects.nonNull(followersDTO)) {
+					followersDTOs.add(followersDTO.getId());
+				} else {
+					System.out.println("Customer not found with id: " + e);
+				}
+			}
+			for (String e : customerDTO.getFollowers()) {
+				if (StringUtils.isNotBlank(e))
+					followersDTOs.add(e);
+			}
+			StringBuilder followersEntity = new StringBuilder();
+			int n = followersDTOs.size(), i = 1;
+			for (String e : followersDTOs) {
+				if (i < n)
+					followersEntity.append(e + ",");
+				else if (i == n)
+					followersEntity.append(e);
+				i++;
+			}
+			customerEntity.setFollowers(followersEntity.toString());
+			customerRepo.save(customerEntity);
+			customerDTO.setFollowers(followersDTOs);
+			System.out.println("Followers added");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return customerDTO;
+	}
+	
 }

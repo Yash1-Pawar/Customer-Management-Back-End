@@ -3,6 +3,7 @@ package com.customer.app.service;
 import java.util.List;
 
 import com.customer.app.model.CustomerDTO;
+import com.customer.app.model.RestPasswordDTO;
 
 public interface CustomerService {
 
@@ -20,6 +21,10 @@ public interface CustomerService {
 
 	CustomerDTO addFriend(String id, List<String> friendIds);
 
-	void resetPassword(String password, String id) throws Exception;
+	void changePassword(RestPasswordDTO restPasswordDTO, String id) throws Exception;
+
+	CustomerDTO addFollowers(String id, List<String> friendIds);
+
+	void resetPassword(String newPassword, String id) throws Exception;
 
 }
