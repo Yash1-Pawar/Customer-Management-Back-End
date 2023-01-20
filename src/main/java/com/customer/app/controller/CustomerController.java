@@ -3,6 +3,7 @@ package com.customer.app.controller;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.customer.app.Exception.CustomerException;
 import com.customer.app.model.CustomerDTO;
 import com.customer.app.model.RestPasswordDTO;
 import com.customer.app.service.CustomerService;
@@ -120,6 +122,27 @@ public class CustomerController {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 	}
+	
+	@PutMapping("/follow/{id}")
+	public ResponseEntity<String> follow(@PathVariable String id, @RequestBody String followingId) {
+		try {
+			if(StringUtils.equals(id, followingId)) throw new CustomerException("You can't follow userself");
+			customerService.follow(id, followingId);
+			return ResponseEntity.ok("You started folowing " + followingId);
+		} catch (CustomerException e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+		}
+	}
 
+	@PutMapping("/unfollow/{id}")
+	public ResponseEntity<String> unfollow(@PathVariable String id, @RequestBody String followerId) {
+		try {
+			if(StringUtils.equals(id, followerId)) throw new CustomerException("You can't unfollow userself");
+			customerService.unFollow(id, followerId);
+			return ResponseEntity.ok("You Unfollowed " + followerId);
+		} catch (CustomerException e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+		}
+	}
 
 }

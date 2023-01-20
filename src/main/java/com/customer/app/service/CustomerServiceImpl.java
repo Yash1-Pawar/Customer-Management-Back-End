@@ -1,6 +1,7 @@
 package com.customer.app.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.customer.app.Exception.CustomerException;
 import com.customer.app.entity.CustomerEntity;
 import com.customer.app.model.CustomerDTO;
 import com.customer.app.model.RestPasswordDTO;
@@ -76,8 +78,8 @@ public class CustomerServiceImpl implements CustomerService {
 			throw new Exception("Customer already exists with id: " + customerDTO.getId());
 		}
 		CustomerEntity customerEntity = new CustomerEntity(customerDTO.getId(), customerDTO.getName(),
-				customerDTO.getPassword(), customerDTO.getSkills(), customerDTO.getDesc(),
-				customerDTO.getGender(), "", "", Roles.USER.toString());
+				customerDTO.getPassword(), customerDTO.getSkills(), customerDTO.getDesc(), customerDTO.getGender(), "",
+				"", Roles.USER.toString());
 		CustomerEntity customerEntityfromDB = customerRepo.save(customerEntity);
 		return customerEntityfromDB.getId();
 	}
@@ -99,7 +101,7 @@ public class CustomerServiceImpl implements CustomerService {
 			customerEntity.setRoles(customerDTO.getRoles());
 		customerRepo.save(customerEntity);
 	}
-	
+
 	@Override
 	public void changePassword(RestPasswordDTO restPasswordDTO, String id) throws Exception {
 		Optional<CustomerEntity> optional = customerRepo.findById(id);
@@ -109,12 +111,12 @@ public class CustomerServiceImpl implements CustomerService {
 			customerEntity.setPassword(passwordEncoder.encode(restPasswordDTO.getNewPassword()));
 			customerRepo.save(customerEntity);
 			System.out.println("Password Reset successfull. Login with new password");
-		}else {
+		} else {
 			System.out.println("Old Password doesnot match");
 			throw new Exception("Old Password doesnot match");
 		}
 	}
-	
+
 	@Override
 	public void resetPassword(String newPassword, String id) throws Exception {
 		Optional<CustomerEntity> optional = customerRepo.findById(id);
@@ -125,7 +127,6 @@ public class CustomerServiceImpl implements CustomerService {
 		customerRepo.save(customerEntity);
 		System.out.println("Password Reset successfull. Login with new password");
 	}
-
 
 	@Override
 	public void deleteCustomer(String id) throws Exception {
@@ -231,5 +232,54 @@ public class CustomerServiceImpl implements CustomerService {
 		}
 		return customerDTO;
 	}
-	
+
+	@Override
+	public void follow(String userId, String followingId) throws CustomerException {
+		Optional<CustomerEntity> customerOptional = customerRepo.findById(userId);
+		CustomerEntity customerEntity = customerOptional.orElseThrow(() -> new CustomerException("Customer Not Found"));
+		CustomerEntity friendEntity = customerRepo.findById(followingId)
+				.orElseThrow(() -> new CustomerException("Friend Not Found"));
+		String friends = customerEntity.getFriendsId();
+		friends += "," + followingId;
+		if(StringUtils.startsWith(friends, ",")) {
+			friends = StringUtils.substring(friends, 1);
+		}
+		String followers = friendEntity.getFollowers();
+		followers += "," + userId;
+		if(StringUtils.startsWith(followers, ",")) {
+			followers = StringUtils.substring(followers, 1);
+		}
+//		add following to user
+		customerEntity.setFriendsId(friends);
+//		add follower to following
+		friendEntity.setFollowers(followers);
+		customerRepo.save(customerEntity);
+		customerRepo.save(friendEntity);
+	}
+
+	@Override
+	public void unFollow(String userId, String followerId) throws CustomerException {
+		Optional<CustomerEntity> customerOptional = customerRepo.findById(userId);
+		CustomerEntity customerEntity = customerOptional.orElseThrow(() -> new CustomerException("Customer Not Found"));
+		CustomerEntity friendEntity = customerRepo.findById(followerId)
+				.orElseThrow(() -> new CustomerException("Follower Not Found"));
+
+		StringBuilder followings = new StringBuilder();
+		String[] friendsList = customerEntity.getFriendsId().split(",");
+		Arrays.asList(friendsList).stream().filter((friend) -> !friend.equals(followerId))
+				.forEach((e) -> followings.append(e + ","));
+//		remove following from userId
+		customerEntity.setFriendsId(followings.substring(0, followings.length()-1));
+		
+		StringBuilder followers = new StringBuilder();
+		String[] followersList = friendEntity.getFollowers().split(",");
+		Arrays.asList(followersList).stream().filter((follower) -> !follower.equals(userId))
+				.forEach((e) -> followers.append(e + ","));
+//		remove follower from followerId
+		friendEntity.setFollowers(followers.substring(0, followers.length()-1));
+
+		customerRepo.save(customerEntity);
+		customerRepo.save(friendEntity);
+	}
+
 }

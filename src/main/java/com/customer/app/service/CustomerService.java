@@ -2,6 +2,7 @@ package com.customer.app.service;
 
 import java.util.List;
 
+import com.customer.app.Exception.CustomerException;
 import com.customer.app.model.CustomerDTO;
 import com.customer.app.model.RestPasswordDTO;
 
@@ -26,5 +27,9 @@ public interface CustomerService {
 	CustomerDTO addFollowers(String id, List<String> friendIds);
 
 	void resetPassword(String newPassword, String id) throws Exception;
+
+	void follow(String userId, String followingId) throws CustomerException;
+
+	void unFollow(String userId, String followerId) throws CustomerException;
 
 }
