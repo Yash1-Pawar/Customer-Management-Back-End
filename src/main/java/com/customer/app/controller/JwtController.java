@@ -2,6 +2,7 @@ package com.customer.app.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,13 +37,13 @@ public class JwtController {
 	}
 
 	@PostMapping("/registerUser")
-	public ResponseEntity<AuthenticationResponse> register(@RequestBody CustomerDTO customerDTO) {
+	public ResponseEntity<String> register(@RequestBody CustomerDTO customerDTO) {
 		System.out.println("Registering User: "+ customerDTO);
 		try {
-			AuthenticationResponse authenticationResponse= authenticationService.register(customerDTO);
-			return ResponseEntity.ok(authenticationResponse);
+			authenticationService.register(customerDTO);
+			return new ResponseEntity<String>("Customer Registered Successfully", HttpStatus.CREATED);
 		} catch (Exception e) {
-			return new ResponseEntity<AuthenticationResponse>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 	}
 
