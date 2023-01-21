@@ -241,12 +241,12 @@ public class CustomerServiceImpl implements CustomerService {
 				.orElseThrow(() -> new CustomerException("Friend Not Found"));
 		String friends = customerEntity.getFriendsId();
 		friends += "," + followingId;
-		if(StringUtils.startsWith(friends, ",")) {
+		if (StringUtils.startsWith(friends, ",")) {
 			friends = StringUtils.substring(friends, 1);
 		}
 		String followers = friendEntity.getFollowers();
 		followers += "," + userId;
-		if(StringUtils.startsWith(followers, ",")) {
+		if (StringUtils.startsWith(followers, ",")) {
 			followers = StringUtils.substring(followers, 1);
 		}
 //		add following to user
@@ -262,21 +262,29 @@ public class CustomerServiceImpl implements CustomerService {
 		Optional<CustomerEntity> customerOptional = customerRepo.findById(userId);
 		CustomerEntity customerEntity = customerOptional.orElseThrow(() -> new CustomerException("Customer Not Found"));
 		CustomerEntity friendEntity = customerRepo.findById(followerId)
-				.orElseThrow(() -> new CustomerException("Follower Not Found"));
+				.orElseThrow(() -> new CustomerException("Following customer Not Found"));
 
 		StringBuilder followings = new StringBuilder();
 		String[] friendsList = customerEntity.getFriendsId().split(",");
 		Arrays.asList(friendsList).stream().filter((friend) -> !friend.equals(followerId))
 				.forEach((e) -> followings.append(e + ","));
 //		remove following from userId
-		customerEntity.setFriendsId(followings.substring(0, followings.length()-1));
-		
+		if (StringUtils.endsWith(followings, ",")) {
+			customerEntity.setFriendsId(followings.substring(0, followings.length() - 1));
+		}else {
+			customerEntity.setFriendsId(followings.toString());
+		}
+
 		StringBuilder followers = new StringBuilder();
 		String[] followersList = friendEntity.getFollowers().split(",");
 		Arrays.asList(followersList).stream().filter((follower) -> !follower.equals(userId))
 				.forEach((e) -> followers.append(e + ","));
 //		remove follower from followerId
-		friendEntity.setFollowers(followers.substring(0, followers.length()-1));
+		if (StringUtils.endsWith(followers, ",")) {
+			friendEntity.setFollowers(followers.substring(0, followers.length() - 1));
+		}else {
+			friendEntity.setFollowers(followers.toString());
+		}
 
 		customerRepo.save(customerEntity);
 		customerRepo.save(friendEntity);
