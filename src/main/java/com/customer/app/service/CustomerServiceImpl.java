@@ -289,5 +289,38 @@ public class CustomerServiceImpl implements CustomerService {
 		customerRepo.save(customerEntity);
 		customerRepo.save(friendEntity);
 	}
+	
+	@Override
+	public void removeFollower(String userId, String followerId) throws CustomerException {
+		Optional<CustomerEntity> customerOptional = customerRepo.findById(userId);
+		CustomerEntity customerEntity = customerOptional.orElseThrow(() -> new CustomerException("Customer Not Found"));
+		CustomerEntity friendEntity = customerRepo.findById(followerId)
+				.orElseThrow(() -> new CustomerException("Following customer Not Found"));
+
+		StringBuilder followings = new StringBuilder();
+		String[] friendsList = friendEntity.getFriendsId().split(",");
+		Arrays.asList(friendsList).stream().filter((friend) -> !friend.equals(userId))
+				.forEach((e) -> followings.append(e + ","));
+//		remove userId from friend's followings
+		if (StringUtils.endsWith(followings, ",")) {
+			friendEntity.setFriendsId(followings.substring(0, followings.length() - 1));
+		}else {
+			friendEntity.setFriendsId(followings.toString());
+		}
+
+		StringBuilder followers = new StringBuilder();
+		String[] followersList = customerEntity.getFollowers().split(",");
+		Arrays.asList(followersList).stream().filter((follower) -> !follower.equals(followerId))
+				.forEach((e) -> followers.append(e + ","));
+//		remove follower from user's Followers
+		if (StringUtils.endsWith(followers, ",")) {
+			customerEntity.setFollowers(followers.substring(0, followers.length() - 1));
+		}else {
+			customerEntity.setFollowers(followers.toString());
+		}
+
+		customerRepo.save(customerEntity);
+		customerRepo.save(friendEntity);
+	}
 
 }

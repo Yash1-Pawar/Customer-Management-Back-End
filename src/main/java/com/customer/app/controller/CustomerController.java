@@ -144,5 +144,16 @@ public class CustomerController {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 		}
 	}
+	
+	@PutMapping("/removeFollower/{id}")
+	public ResponseEntity<String> removeFollower(@PathVariable String id, @RequestBody String followerId) {
+		try {
+			if(StringUtils.equals(id, followerId)) throw new CustomerException("You can't remove userself");
+			customerService.removeFollower(id, followerId);
+			return ResponseEntity.ok(followerId + " removed successfully");
+		} catch (CustomerException e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+		}
+	}
 
 }

@@ -32,4 +32,6 @@ public interface CustomerService {
 
 	void unFollow(String userId, String followerId) throws CustomerException;
 
+	void removeFollower(String userId, String followerId) throws CustomerException;
+
 }
